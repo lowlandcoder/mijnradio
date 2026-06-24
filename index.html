@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MijnRadio</title>
+  <link rel="stylesheet" href="huisstijl.css">
+  <style>
+    /* ============================================================
+       Alleen voor MijnRadio. Kleuren en glaslook komen uit
+       huisstijl.css; hier staat alleen de opmaak van de speler.
+       ============================================================ */
+
+    /* Statusbalk: altijd zichtbaar bovenin het paneel */
+    .nu-speelt {
+      position: sticky;
+      top: 12px;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .nu-logo {
+      width: 56px;
+      height: 56px;
+      flex: 0 0 56px;
+      border-radius: 14px;
+      border: 1px solid var(--rand);
+      object-fit: cover;
+      background: rgba(255, 255, 255, .06);
+    }
+    .nu-tekst { min-width: 0; }
+    .nu-station {
+      font-size: 17px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .nu-track {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .nu-status {
+      margin-left: auto;
+      flex: 0 0 auto;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+    }
+    .stip {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--muted);
+      display: inline-block;
+    }
+    .stip.speelt { background: var(--geld); box-shadow: 0 0 10px var(--geld); }
+    .stip.gedempt { background: var(--gas); }
+
+    /* Bedieningsknoppen */
+    .bediening {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .knop {
+      appearance: none;
+      cursor: pointer;
+      color: var(--tekst);
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--rand);
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background .15s, border-color .15s;
+    }
+    .knop:hover { background: rgba(255, 255, 255, .12); }
+    .knop.actief { border-color: var(--accent); color: var(--accent); }
+    .knop:disabled { opacity: .45; cursor: default; }
+
+    /* Rooster met 12 stationsknoppen */
+    .rooster {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 720px) { .rooster { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 480px) { .rooster { grid-template-columns: repeat(2, 1fr); } }
+
+    .station {
+      appearance: none;
+      cursor: pointer;
+      color: var(--tekst);
+      background: var(--kaart);
+      border: 1px solid var(--rand);
+      border-radius: var(--radius);
+      padding: 16px 10px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 9px;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: transform .12s, border-color .15s, background .15s;
+    }
+    .station:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, .22); }
+    .station.actief {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent) inset;
+    }
+    .station-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: rgba(255, 255, 255, .06);
+    }
+    /* Terugval als er geen logo is: initialen op een chip */
+    .station-val {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .station-naam {
+      font-size: 12px;
+      line-height: 1.25;
+      color: var(--tekst);
+      word-break: break-word;
+    }
+
+    /* Beheerpaneel: stations wisselen via keuzelijsten */
+    .beheer-kop {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 22px 0 0;
+    }
+    .beheer-kop h2 { font-size: 15px; font-weight: 600; }
+    details.beheer { margin-top: 12px; }
+    details.beheer > summary { list-style: none; cursor: pointer; }
+    details.beheer > summary::-webkit-details-marker { display: none; }
+    .sleuven {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    @media (max-width: 560px) { .sleuven { grid-template-columns: 1fr; } }
+    .sleuf {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sleuf span {
+      flex: 0 0 22px;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+    select {
+      flex: 1;
+      min-width: 0;
+      color: var(--tekst);
+      background: rgba(5, 18, 39, .9);
+      border: 1px solid var(--rand);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+    .uitleg { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <main class="app">
+    <h1 class="merk">Mijn<em>Radio</em></h1>
+    <div class="merk-sub">Twaalf favoriete internetradiostations op één pagina</div>
+
+    <!-- Statusbalk: toont altijd welk station speelt en de geluidsstatus -->
+    <div class="nu-speelt kaart">
+      <div id="nuLogo" class="station-val nu-logo" style="background:#33415a">–</div>
+      <div class="nu-tekst">
+        <div id="nuStation" class="nu-station">Geen station gekozen</div>
+        <div id="nuTrack" class="nu-track">Artiest: onbekend &middot; Titel: onbekend</div>
+      </div>
+      <div class="nu-status">
+        <span id="statusStip" class="stip"></span>
+        <span id="statusTekst">Gestopt</span>
+      </div>
+    </div>
+
+    <!-- Bediening -->
+    <div class="bediening">
+      <button id="btnStart" class="knop">&#9658; Starten</button>
+      <button id="btnStop" class="knop">&#9632; Stoppen</button>
+      <button id="btnMute" class="knop">&#128266; Dempen</button>
+    </div>
+
+    <!-- 12 stationsknoppen -->
+    <div id="rooster" class="rooster"></div>
+
+    <!-- Stations wisselen -->
+    <div class="beheer-kop">
+      <h2>Stations wijzigen</h2>
+    </div>
+    <details class="beheer">
+      <summary class="knop">Lijst openen</summary>
+      <p class="uitleg">Kies per plek (1 t/m 12) een ander station uit de lijst.
+        De keuze wordt op dit apparaat onthouden.</p>
+      <div id="sleuven" class="sleuven"></div>
+    </details>
+
+    <audio id="speler" preload="none"></audio>
+  </main>
+
+  <script>
+  /* ================================================================
+     STATIONSLIJST — hier de eigen stations invullen of aanpassen.
+     Elk station heeft: id, naam, stream (URL) en eventueel logo
+     (een bestand in de map logos/ of een volledige URL). Laat logo
+     leeg om automatisch de initialen op een gekleurde chip te tonen.
+     Voeg gerust meer stations toe dan twaalf: de extra stations
+     verschijnen in de keuzelijst onder "Stations wijzigen".
+     ================================================================ */
+  const CATALOGUS = [
+    { id: "radio2",    naam: "NPO Radio 2",  stream: "https://icecast.omroep.nl/radio2-bb-mp3",  logo: "" },
+    { id: "3fm",       naam: "NPO 3FM",      stream: "https://icecast.omroep.nl/3fm-bb-mp3",     logo: "" },
+    { id: "radio1",    naam: "NPO Radio 1",  stream: "https://icecast.omroep.nl/radio1-bb-mp3",  logo: "" },
+    { id: "radio5",    naam: "NPO Radio 5",  stream: "https://icecast.omroep.nl/radio5-bb-mp3",  logo: "" },
+    { id: "538",       naam: "Radio 538",    stream: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO538.mp3", logo: "" },
+    { id: "skyradio",  naam: "Sky Radio",    stream: "https://playerservices.streamtheworld.com/api/livestream-redirect/SKYRADIO.mp3", logo: "" },
+    { id: "qmusic",    naam: "Qmusic",       stream: "https://stream.qmusic.nl/qmusic/mp3",      logo: "" },
+    { id: "radio10",   naam: "Radio 10",     stream: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO10.mp3", logo: "" },
+    { id: "veronica",  naam: "Radio Veronica", stream: "https://playerservices.streamtheworld.com/api/livestream-redirect/VERONICA.mp3", logo: "" },
+    { id: "100nl",     naam: "100% NL",      stream: "https://stream.100p.nl/100pctnl.mp3",      logo: "" },
+    { id: "slam",      naam: "SLAM!",        stream: "https://stream.slam.nl/slam_mp3",          logo: "" },
+    { id: "sublime",   naam: "Sublime",      stream: "https://playerservices.streamtheworld.com/api/livestream-redirect/SUBLIME.mp3", logo: "" },
+    { id: "classicnl", naam: "Classic FM",   stream: "https://playerservices.streamtheworld.com/api/livestream-redirect/CLASSICNL.mp3", logo: "" },
+    { id: "groot",     naam: "Groot Nieuws Radio", stream: "https://stream.grootnieuwsradio.nl/grootnieuwsradio.mp3", logo: "" },
+    { id: "kink",      naam: "KINK",         stream: "https://stream.kink.nl/kink/mp3",          logo: "" },
+    { id: "arrow",     naam: "Arrow Classic Rock", stream: "https://playerservices.streamtheworld.com/api/livestream-redirect/ARROW_CLASSIC.mp3", logo: "" }
+  ];
+
+  /* De twaalf plekken bij de eerste keer openen (verwijzen naar id's hierboven). */
+  const STANDAARD = ["radio2","3fm","radio1","538","skyradio","qmusic","radio10","veronica","100nl","slam","sublime","classicnl"];
+
+  /* ================================================================
+     Vanaf hier de werking van de pagina; aanpassen is meestal niet nodig.
+     ================================================================ */
+  const OPSLAG = "mijnradio.selectie";
+  const KLEUREN = ["#4dabf7","#69db7c","#f4a261","#9775fa","#ff8787","#3bc9db","#ffd43b","#da77f2","#63e6be","#74c0fc","#ffa94d","#b197fc"];
+
+  const $ = (id) => document.getElementById(id);
+  const speler = $("speler");
+  let selectie = laadSelectie();
+  let actiefId = null;
+
+  function vindStation(id) { return CATALOGUS.find(s => s.id === id) || null; }
+  function kleurVoor(id) {
+    let som = 0; for (const t of id) som += t.charCodeAt(0);
+    return KLEUREN[som % KLEUREN.length];
+  }
+  function initialen(naam) {
+    return naam.replace(/[^A-Za-z0-9 ]/g, "").split(" ").filter(Boolean)
+               .slice(0, 2).map(w => w[0]).join("").toUpperCase() || "?";
+  }
+
+  function laadSelectie() {
+    try {
+      const opgeslagen = JSON.parse(localStorage.getItem(OPSLAG));
+      if (Array.isArray(opgeslagen) && opgeslagen.length === 12) return opgeslagen;
+    } catch (e) {}
+    return STANDAARD.slice(0, 12);
+  }
+  function bewaarSelectie() {
+    try { localStorage.setItem(OPSLAG, JSON.stringify(selectie)); } catch (e) {}
+  }
+
+  /* Logo of terugval (initialen) in een element zetten */
+  function vulLogo(doel, station, valKlasse, logoKlasse) {
+    doel.replaceWith(maakLogo(station, doel.id, valKlasse, logoKlasse));
+  }
+  function maakLogo(station, id, valKlasse, logoKlasse) {
+    let el;
+    if (station && station.logo) {
+      el = document.createElement("img");
+      el.src = station.logo;
+      el.alt = station.naam;
+      el.className = logoKlasse;
+      el.onerror = () => el.replaceWith(maakVal(station, id, valKlasse));
+    } else {
+      el = maakVal(station, id, valKlasse);
+    }
+    el.id = id;
+    return el;
+  }
+  function maakVal(station, id, valKlasse) {
+    const v = document.createElement("div");
+    v.className = valKlasse;
+    if (station) { v.textContent = initialen(station.naam); v.style.background = kleurVoor(station.id); }
+    else { v.textContent = "–"; v.style.background = "#33415a"; }
+    v.id = id;
+    return v;
+  }
+
+  /* Het rooster met twaalf knoppen opbouwen */
+  function bouwRooster() {
+    const rooster = $("rooster");
+    rooster.innerHTML = "";
+    selectie.forEach((sid, i) => {
+      const station = vindStation(sid);
+      const knop = document.createElement("button");
+      knop.className = "station" + (sid === actiefId ? " actief" : "");
+      knop.dataset.id = sid;
+      knop.title = station ? "Speel " + station.naam : "Onbekend station";
+
+      const logo = maakLogo(station, "logo-" + i, "station-val", "station-logo");
+      logo.classList.add(station && station.logo ? "station-logo" : "station-val");
+      const naam = document.createElement("div");
+      naam.className = "station-naam";
+      naam.textContent = station ? station.naam : sid;
+
+      knop.appendChild(logo);
+      knop.appendChild(naam);
+      knop.addEventListener("click", () => speel(sid));
+      rooster.appendChild(knop);
+    });
+  }
+
+  /* De keuzelijsten voor het wisselen opbouwen */
+  function bouwSleuven() {
+    const houder = $("sleuven");
+    houder.innerHTML = "";
+    selectie.forEach((sid, i) => {
+      const rij = document.createElement("div");
+      rij.className = "sleuf";
+      const nr = document.createElement("span");
+      nr.textContent = (i + 1) + ".";
+      const keuze = document.createElement("select");
+      CATALOGUS.forEach(s => {
+        const optie = document.createElement("option");
+        optie.value = s.id;
+        optie.textContent = s.naam;
+        if (s.id === sid) optie.selected = true;
+        keuze.appendChild(optie);
+      });
+      keuze.addEventListener("change", () => {
+        selectie[i] = keuze.value;
+        bewaarSelectie();
+        bouwRooster();
+      });
+      rij.appendChild(nr);
+      rij.appendChild(keuze);
+      houder.appendChild(rij);
+    });
+  }
+
+  /* Statusbalk bijwerken */
+  function werkStatusBij(toestand) {
+    const stip = $("statusStip");
+    const tekst = $("statusTekst");
+    stip.className = "stip";
+    if (toestand === "speelt") { stip.classList.add("speelt"); tekst.textContent = "Speelt"; }
+    else if (toestand === "gedempt") { stip.classList.add("gedempt"); tekst.textContent = "Gedempt"; }
+    else if (toestand === "laden") { tekst.textContent = "Verbinden..."; }
+    else { tekst.textContent = "Gestopt"; }
+  }
+
+  function toonNu(station) {
+    const oudLogo = $("nuLogo");
+    const nieuw = maakLogo(station, "nuLogo", "station-val nu-logo", "nu-logo");
+    oudLogo.replaceWith(nieuw);
+    $("nuStation").textContent = station ? station.naam : "Geen station gekozen";
+    // Metadata (artiest/titel) wordt voorlopig niet uit de stream gelezen.
+    $("nuTrack").textContent = "Artiest: onbekend · Titel: onbekend";
+  }
+
+  /* Een station starten */
+  function speel(sid) {
+    const station = vindStation(sid);
+    if (!station || !station.stream) return;
+    actiefId = sid;
+    toonNu(station);
+    werkStatusBij("laden");
+    speler.src = station.stream;
+    speler.play().catch(() => werkStatusBij("gestopt"));
+    markeerActief();
+    $("btnMute").classList.toggle("actief", speler.muted);
+  }
+
+  function markeerActief() {
+    document.querySelectorAll(".station").forEach(k =>
+      k.classList.toggle("actief", k.dataset.id === actiefId));
+  }
+
+  /* Knoppen */
+  $("btnStart").addEventListener("click", () => {
+    if (actiefId) speel(actiefId);
+    else if (selectie[0]) speel(selectie[0]);
+  });
+  $("btnStop").addEventListener("click", () => {
+    speler.pause();
+    speler.removeAttribute("src");
+    speler.load();
+    werkStatusBij("gestopt");
+  });
+  $("btnMute").addEventListener("click", () => {
+    speler.muted = !speler.muted;
+    $("btnMute").classList.toggle("actief", speler.muted);
+    $("btnMute").innerHTML = speler.muted ? "&#128263; Demping uit" : "&#128266; Dempen";
+    if (!speler.paused) werkStatusBij(speler.muted ? "gedempt" : "speelt");
+  });
+
+  /* Speler-gebeurtenissen koppelen aan de statusbalk */
+  speler.addEventListener("playing", () => werkStatusBij(speler.muted ? "gedempt" : "speelt"));
+  speler.addEventListener("pause", () => { if (!speler.src) werkStatusBij("gestopt"); });
+  speler.addEventListener("waiting", () => werkStatusBij("laden"));
+  speler.addEventListener("error", () => werkStatusBij("gestopt"));
+
+  /* Opbouwen */
+  bouwRooster();
+  bouwSleuven();
+  werkStatusBij("gestopt");
+  </script>
+
+</body>
+</html>
