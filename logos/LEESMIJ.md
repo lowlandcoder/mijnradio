@@ -28,3 +28,9 @@ Staat er een te groot of niet-vierkant bestand in de map, dan kan dit
 commando het bijsnijden (Python met Pillow):
 
     python3 -c "from PIL import Image; b=Image.open('logos/<naam>.png').convert('RGBA'); d=Image.new('RGBA',(128,128),(255,255,255,255)); b.thumbnail((128,128)); d.paste(b,((128-b.width)//2,(128-b.height)//2),b); d.convert('RGB').save('logos/<naam>.png')"
+
+## Map bron
+
+De oorspronkelijke bestanden staan in `logos/bron/`. Die map staat in
+`.gitignore` en gaat dus niet mee naar GitHub en niet naar de webserver. Moet
+een logo opnieuw worden bijgesneden, dan is het origineel daar terug te vinden.
