@@ -20,7 +20,9 @@ telt dertig zenders.
 Elk station heeft een naam, een stream-URL en een logopad. Het logopad is altijd
 `logos/<id>.png`. Ontbreekt dat bestand, dan verschijnen de initialen op een
 gekleurde tegel. Er mogen meer dan twaalf stations in de lijst staan; de extra
-stations verschijnen in de keuzelijst onder "Stations wijzigen".
+stations verschijnen in de keuzelijst onder "Stations wijzigen". Die keuzelijst
+toont de zenders op naam gesorteerd; de volgorde in `CATALOGUS` blijft zoals
+die is.
 
 De twaalf actieve plekken staan in `STANDAARD`. Een gewijzigde keuze wordt per
 apparaat onthouden in de browser, onder de naam in `OPSLAG`. Moet een nieuwe

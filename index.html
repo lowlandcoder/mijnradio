@@ -303,6 +303,13 @@
   const OPSLAG = "mijnradio.selectie.2";
   const KLEUREN = ["#4dabf7","#69db7c","#f4a261","#9775fa","#ff8787","#3bc9db","#ffd43b","#da77f2","#63e6be","#74c0fc","#ffa94d","#b197fc"];
 
+  /* De keuzelijsten tonen de zenders op naam gesorteerd, zodat een zender in
+     een lange lijst snel te vinden is. De volgorde in CATALOGUS blijft zoals
+     die is; alleen de weergave wordt gesorteerd. De optie numeric zorgt dat
+     Radio 2 voor Radio 10 komt. */
+  const GESORTEERD = CATALOGUS.slice().sort(
+    (a, b) => a.naam.localeCompare(b.naam, "nl", { numeric: true, sensitivity: "base" }));
+
   const $ = (id) => document.getElementById(id);
   const speler = $("speler");
   let selectie = laadSelectie();
@@ -390,7 +397,7 @@
       const nr = document.createElement("span");
       nr.textContent = (i + 1) + ".";
       const keuze = document.createElement("select");
-      CATALOGUS.forEach(s => {
+      GESORTEERD.forEach(s => {
         const optie = document.createElement("option");
         optie.value = s.id;
         optie.textContent = s.naam;
