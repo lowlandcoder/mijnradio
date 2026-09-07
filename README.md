@@ -22,7 +22,8 @@ Elk station heeft een naam, een stream-URL en een logopad. Het logopad is altijd
 gekleurde tegel. Er mogen meer dan twaalf stations in de lijst staan; de extra
 stations verschijnen in de keuzelijst onder "Stations wijzigen". Die keuzelijst
 toont de zenders op naam gesorteerd; de volgorde in `CATALOGUS` blijft zoals
-die is.
+die is. Achter een zender die al op het rooster staat, verschijnt een vinkje met
+het nummer van die plek.
 
 De twaalf actieve plekken staan in `STANDAARD`. Een gewijzigde keuze wordt per
 apparaat onthouden in de browser, onder de naam in `OPSLAG`. Moet een nieuwe

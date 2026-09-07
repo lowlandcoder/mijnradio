@@ -243,7 +243,8 @@
     <details class="beheer">
       <summary class="knop">Lijst openen</summary>
       <p class="uitleg">Kies per plek (1 t/m 12) een ander station uit de lijst.
-        De keuze wordt op dit apparaat onthouden.</p>
+        Een zender met een vinkje staat al op het rooster; het nummer erachter
+        geeft aan op welke plek. De keuze wordt op dit apparaat onthouden.</p>
       <div id="sleuven" class="sleuven"></div>
     </details>
 
@@ -387,6 +388,24 @@
     });
   }
 
+  /* Achter een zender die al op het rooster staat, komt een vinkje met het
+     nummer van die plek. Zo is in de keuzelijst te zien wat al gekozen is. */
+  function optieTekst(station) {
+    const plek = selectie.indexOf(station.id);
+    return plek === -1 ? station.naam : station.naam + "  \u2714 plek " + (plek + 1);
+  }
+
+  /* De markeringen bijwerken zonder de keuzelijsten opnieuw op te bouwen,
+     zodat de lijst niet terugspringt terwijl er wordt gekozen. */
+  function werkMarkeringenBij() {
+    document.querySelectorAll("#sleuven select").forEach(keuze => {
+      Array.from(keuze.options).forEach(optie => {
+        const station = vindStation(optie.value);
+        if (station) optie.textContent = optieTekst(station);
+      });
+    });
+  }
+
   /* De keuzelijsten voor het wisselen opbouwen */
   function bouwSleuven() {
     const houder = $("sleuven");
@@ -400,7 +419,7 @@
       GESORTEERD.forEach(s => {
         const optie = document.createElement("option");
         optie.value = s.id;
-        optie.textContent = s.naam;
+        optie.textContent = optieTekst(s);
         if (s.id === sid) optie.selected = true;
         keuze.appendChild(optie);
       });
@@ -408,6 +427,7 @@
         selectie[i] = keuze.value;
         bewaarSelectie();
         bouwRooster();
+        werkMarkeringenBij();
       });
       rij.appendChild(nr);
       rij.appendChild(keuze);
