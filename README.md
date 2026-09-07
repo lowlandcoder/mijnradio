@@ -15,7 +15,8 @@ naast elkaar, en de zendernaam in een groot lettertype.
 
 ## Stations aanpassen
 
-De stationslijst staat bovenin het script in `index.html` onder `CATALOGUS`.
+De stationslijst staat bovenin het script in `index.html` onder `CATALOGUS` en
+telt dertig zenders.
 Elk station heeft een naam, een stream-URL en een logopad. Het logopad is altijd
 `logos/<id>.png`. Ontbreekt dat bestand, dan verschijnen de initialen op een
 gekleurde tegel. Er mogen meer dan twaalf stations in de lijst staan; de extra
